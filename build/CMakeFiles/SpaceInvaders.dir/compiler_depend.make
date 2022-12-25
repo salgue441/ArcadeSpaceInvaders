@@ -180,8 +180,43 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
   /usr/include/c++/11/bits/cxxabi_init_exception.h \
   /usr/include/c++/11/typeinfo \
   /usr/include/c++/11/bits/nested_exception.h \
-  ../OpenGL/Error/glError.h
+  ../OpenGL/Error/glError.h \
+  ../OpenGL/Buffer/Buffer.cpp \
+  ../OpenGL/Buffer/Buffer.h \
+  /usr/include/c++/11/cstring \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  ../Game/Game.cpp \
+  ../Game/Game.h \
+  ../Player/Player.cpp \
+  ../Player/Player.h \
+  ../Bullet/Bullet.cpp \
+  ../Bullet/Bullet.h \
+  ../Alien/Alien.cpp \
+  ../Alien/Alien.h \
+  ../Sprite/Sprite.cpp \
+  ../Sprite/Sprite.h \
+  ../Player/Player.cpp \
+  ../Player/Player.h \
+  ../Bullet/Bullet.cpp \
+  ../Bullet/Bullet.h \
+  ../Alien/Alien.cpp \
+  ../Alien/Alien.h
 
+
+../Sprite/Sprite.h:
+
+../Bullet/Bullet.h:
+
+../Bullet/Bullet.cpp:
+
+../Player/Player.h:
+
+/usr/include/string.h:
+
+/usr/include/c++/11/cstring:
+
+../OpenGL/Buffer/Buffer.cpp:
 
 /usr/include/c++/11/bits/nested_exception.h:
 
@@ -194,6 +229,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/stdlib.h:
 
 /usr/include/c++/11/bits/basic_string.tcc:
+
+../OpenGL/Buffer/Buffer.h:
 
 /usr/include/c++/11/bits/charconv.h:
 
@@ -271,6 +308,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h:
 
+../Player/Player.cpp:
+
 /usr/include/c++/11/bits/ostream_insert.h:
 
 /usr/local/include/GLFW/glfw3.h:
@@ -303,6 +342,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
+../Game/Game.h:
+
 /usr/include/x86_64-linux-gnu/sys/cdefs.h:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
@@ -317,7 +358,11 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/byteswap.h:
 
+../Sprite/Sprite.cpp:
+
 /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
+
+../Alien/Alien.cpp:
 
 /usr/include/c++/11/limits:
 
@@ -345,6 +390,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h:
 
+../Alien/Alien.h:
+
 ../main.cpp:
 
 ../OpenGL/Window/Window.cpp:
@@ -360,6 +407,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 /usr/include/GL/glu.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
+
+/usr/include/strings.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
@@ -408,6 +457,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
+
+../Game/Game.cpp:
 
 /usr/include/c++/11/cwchar:
 

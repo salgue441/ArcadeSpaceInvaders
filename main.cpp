@@ -53,6 +53,10 @@ void buffer_draw_number(Buffer *, const Sprite &, size_t, size_t,
 void buffer_draw_text(Buffer *, const Sprite &, const char *,
                       size_t, size_t, uint32_t);
 
+// Shaders
+static const char *create_fragment_shader();
+static const char *create_vertex_shader();
+
 // Shifts and random
 uint32_t xorshift32(uint32_t *);
 double random(uint32_t *);
@@ -93,6 +97,35 @@ int main(int argc, char **argv)
     Buffer buffer(buffer_width, buffer_height);
     buffer_clear(buffer, 0x00000000);
 
+    // Textures
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8,
+                 buffer.get_width(), buffer.get_height(), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
+                 buffer.get_data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                    GL_NEAREST);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                    GL_CLAMP_TO_EDGE);
+
+    // VAO
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+
+    // Creating the shaders
+    static const char *vertex_shader = create_vertex_shader();
+    static const char *fragment_shader = create_fragment_shader();
+
+    GLuint shader_id = glCreateProgram();
+
     // Game variables
     Game game(buffer_width, buffer_height);
     game.set_num_bullets(0);
@@ -116,7 +149,7 @@ int main(int argc, char **argv)
             Alien &alien = game.get_aliens()[xi * 5 + yi];
             alien.set_type((5 - yi) / 2 + 1);
 
-            const Sprite &sprite = alien_sprites[2 * (alien.get_type() - 1)];
+            // const Sprite &sprite = alien_sprites[2 * (alien.get_type() - 1)];
         }
     }
 
@@ -147,6 +180,53 @@ int main(int argc, char **argv)
 }
 
 /* ---- Function Implementation ---- */
+// Validation
+/**
+ * @brief
+ * Validates a shader program
+ * @param shader Shader program to validate
+ * @param file File where the shader program is located
+ */
+void validate_shader(GLuint shader, const char *file)
+{
+    static const unsigned int BUFFER_SIZE{512};
+    char buffer[BUFFER_SIZE];
+    GLsizei length{0};
+
+    glGetShaderInfoLog(shader, BUFFER_SIZE, &length, buffer);
+
+    if (length > 0)
+        fprintf(stderr, "Shader %d (%s) compile error: %s\n",
+                shader, (file ? file : ""), buffer);
+}
+
+/**
+ * @brief
+ * Validates a shader program
+ * @param program Shader program to validate
+ * @return True if the shader program is valid, false otherwise
+ */
+bool validate_program(GLuint program)
+{
+    static const unsigned int BUFFER_SIZE{512};
+    char buffer[BUFFER_SIZE];
+    GLsizei length{0};
+
+    glValidateProgram(program);
+    glGetProgramInfoLog(program, BUFFER_SIZE, &length, buffer);
+
+    if (length > 0)
+    {
+        fprintf(stderr, "Program %d link error: %s\n",
+                program, buffer);
+
+        return false;
+    }
+
+    return true;
+}
+
+// Callbacks
 /**
  * @brief
  * Error callback function
@@ -318,6 +398,54 @@ void buffer_draw_text(Buffer *buffer, const Sprite &sprite,
         buffer_draw_sprite(buffer, letter_spritesheet, xp, y, color);
         xp += sprite.get_width() + 1;
     }
+}
+
+// Shaders
+/**
+ * @brief
+ * Creates a fragment shader
+ * @return Fragment shader
+ */
+static const char *create_fragment_shader()
+{
+    static const char *text{
+        "\n"
+        "#version 330\n"
+        "\n"
+        "uniform sampler2D buffer;\n"
+        "noperspective in vec2 TexCoord;\n"
+        "\n"
+        "out vec3 outColor;\n"
+        "\n"
+        "void main(void){\n"
+        "    outColor = texture(buffer, TexCoord).rgb;\n"
+        "}\n"};
+
+    return text;
+}
+
+/**
+ * @brief
+ * Creates a vertex shader
+ * @return Vertex shader
+ */
+static const char *create_vertex_shader()
+{
+    static const char *text{
+        "\n"
+        "#version 330\n"
+        "\n"
+        "noperspective out vec2 TexCoord;\n"
+        "\n"
+        "void main(void){\n"
+        "\n"
+        "    TexCoord.x = (gl_VertexID == 2)? 2.0: 0.0;\n"
+        "    TexCoord.y = (gl_VertexID == 1)? 2.0: 0.0;\n"
+        "    \n"
+        "    gl_Position = vec4(2.0 * TexCoord - 1.0, 0.0, 1.0);\n"
+        "}\n"};
+
+    return text;
 }
 
 // Shifts and random

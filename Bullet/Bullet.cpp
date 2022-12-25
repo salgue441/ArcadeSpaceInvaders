@@ -17,6 +17,18 @@
  * Construct a new Bullet:: Bullet object
  * @param x x coordinate
  * @param y y coordinate
+ */
+Bullet::Bullet(size_t x, size_t y)
+{
+    this->x = x;
+    this->y = y;
+}
+
+/**
+ * @brief
+ * Construct a new Bullet:: Bullet object
+ * @param x x coordinate
+ * @param y y coordinate
  * @param direction direction of the bullet
  */
 Bullet::Bullet(size_t x, size_t y, int direction)

@@ -18,6 +18,8 @@ class Bullet
 {
 public:
     // Constructor
+    Bullet() = default;
+    Bullet(size_t, size_t);
     Bullet(size_t, size_t, int);
 
     // Destructor

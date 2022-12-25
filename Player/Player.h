@@ -19,6 +19,7 @@ class Player
 {
 public:
     // Constructor
+    Player() = default;
     Player(size_t, size_t, size_t);
 
     // Destructor
