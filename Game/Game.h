@@ -24,6 +24,7 @@ class Game
 {
 public:
     // Constructor
+    Game() = default;
     Game(size_t, size_t);
 
     // Destructor
@@ -40,8 +41,8 @@ public:
     // Setters
     void set_width(size_t &);
     void set_height(size_t &);
-    void set_num_aliens(size_t &);
-    void set_num_bullets(size_t &);
+    void set_num_aliens(size_t);
+    void set_num_bullets(size_t);
 
 private:
     // Game objects

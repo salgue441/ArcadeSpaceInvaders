@@ -101,7 +101,7 @@ void Game::set_height(size_t &height)
  * Set the number of aliens
  * @param num_aliens Number of aliens
  */
-void Game::set_num_aliens(size_t &num_aliens)
+void Game::set_num_aliens(size_t num_aliens)
 {
     this->num_aliens = num_aliens;
 }
@@ -111,7 +111,7 @@ void Game::set_num_aliens(size_t &num_aliens)
  * Set the number of bullets
  * @param num_bullets Number of bullets
  */
-void Game::set_num_bullets(size_t &num_bullets)
+void Game::set_num_bullets(size_t num_bullets)
 {
     this->num_bullets = num_bullets;
 }

@@ -29,6 +29,7 @@
 #include "Game/Game.cpp"
 
 // Sprites
+#include "Sprite/Sprite.cpp"
 
 // Player
 #include "Player/Player.cpp"
@@ -72,6 +73,26 @@ int main(int argc, char **argv)
 
     // Game variables
     Game game(buffer_width, buffer_height);
+    game.set_num_bullets(0);
+    game.set_num_aliens(55);
+
+    game.get_player().set_x(112 - 5);
+    game.get_player().set_y(256 - 16);
+    game.get_player().set_life(3);
+
+    size_t alien_swarm_pos{24};
+    size_t max_alien_swarm_pos{game.get_width() - 16 * 11 - 3};
+    size_t aliens_killed{0};
+    size_t alien_update_timer{0};
+
+    bool should_change_speed{false};
+
+    for (size_t xi{}; xi < 11; ++xi)
+    {
+        for (size_t yi{}; yi < 5; ++yi)
+        {
+        }
+    }
 
     uint32_t clear_color{rgb_to_uint32(0, 128, 0)};
 

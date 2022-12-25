@@ -63,7 +63,7 @@ size_t Player::get_life() const
  * Set the X position of the player
  * @param x X position of the player
  */
-void Player::set_x(size_t &x)
+void Player::set_x(size_t x)
 {
     this->x = x;
 }
@@ -73,7 +73,7 @@ void Player::set_x(size_t &x)
  * Set the Y position of the player
  * @param y Y position of the player
  */
-void Player::set_y(size_t &y)
+void Player::set_y(size_t y)
 {
     this->y = y;
 }
@@ -83,7 +83,7 @@ void Player::set_y(size_t &y)
  * Set the life of the player
  * @param life Life of the player
  */
-void Player::set_life(size_t &life)
+void Player::set_life(size_t life)
 {
     this->life = life;
 }

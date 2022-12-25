@@ -30,9 +30,9 @@ public:
     size_t get_life() const;
 
     // Setters
-    void set_x(size_t &);
-    void set_y(size_t &);
-    void set_life(size_t &);
+    void set_x(size_t);
+    void set_y(size_t);
+    void set_life(size_t);
 
 private:
     size_t x, y;
