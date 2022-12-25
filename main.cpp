@@ -17,15 +17,30 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// OpenGL Error
-#include "OpenGL/Error/glError.h"
-
 /* ---- Custom Headers ---- */
+// OpenGL Error & Window
+#include "OpenGL/Error/glError.h"
 #include "OpenGL/Window/Window.cpp"
 
+// Buffer
+#include "OpenGL/Buffer/Buffer.cpp"
+
+// Game
+#include "Game/Game.cpp"
+
+// Sprites
+
+// Player
+#include "Player/Player.cpp"
+
 /* ---- Function Prototypes ---- */
+// Callbacks
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
+
+// Buffer
+void buffer_clear(Buffer &, uint32_t);
+uint32_t rgb_to_uint32(uint8_t, uint8_t, uint8_t);
 
 /* ---- Global variables ---- */
 bool game_running{true};
@@ -43,19 +58,27 @@ int main(int argc, char **argv)
     const size_t buffer_height{256};
 
     Window window(buffer_width, buffer_height, "Space Invaders");
-    glfwSetKeyCallback(window.getWindow(), key_callback);
+    glfwSetKeyCallback(window.get_window(), key_callback);
 
     gl_debug(__FILE__, __LINE__);
 
     // VSync
     glfwSwapInterval(1);
-
     glClearColor(1.0f, 0.0, 0.0f, 1.0f);
 
+    // Buffer creation
+    Buffer buffer(buffer_width, buffer_height);
+    buffer_clear(buffer, 0x00000000);
+
+    // Game variables
+    Game game(buffer_width, buffer_height);
+
+    uint32_t clear_color{rgb_to_uint32(0, 128, 0)};
+
     // Main loop
-    while (game_running)
+    while (!glfwWindowShouldClose(window.get_window()) && game_running)
     {
-        window.update();
+        buffer_clear(buffer, clear_color);
 
         window.clear();
     }
@@ -128,4 +151,33 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     default:
         break;
     }
+}
+
+// Buffer
+/**
+ * @brief
+ * Clear the buffer
+ * @param buffer Buffer to clear
+ * @param color Color to clear the buffer with
+ * @return void
+ */
+void buffer_clear(Buffer &buffer, uint32_t color)
+{
+    uint32_t *pixel{buffer.get_data()};
+
+    for (size_t i{0}; i < buffer.get_width() * buffer.get_height(); i++)
+        pixel[i] = color;
+}
+
+/**
+ * @brief
+ * Convert RGB values to a uint32_t
+ * @param r Red value
+ * @param g Green value
+ * @param b Blue value
+ * @return uint32_t
+ */
+uint32_t rgb_to_uint32(uint8_t r, uint8_t g, uint8_t b)
+{
+    return (r << 24) | (g << 16) | (b << 8) | 255;
 }

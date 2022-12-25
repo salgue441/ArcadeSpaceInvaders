@@ -34,10 +34,10 @@ public:
     ~Window() = default;
 
     // Getters
-    const size_t getWidth() const;
-    const size_t getHeight() const;
-    const std::string getTitle() const;
-    GLFWwindow *getWindow() const;
+    const size_t get_width() const;
+    const size_t get_height() const;
+    const std::string get_title() const;
+    GLFWwindow *get_window() const;
 
     // Functions
     void init();

@@ -35,7 +35,7 @@ Window::Window(size_t width, size_t height, std::string_view title)
  * Get the Width of the window
  * @return const size_t Width of the window
  */
-const size_t Window::getWidth() const
+const size_t Window::get_width() const
 {
     return this->m_width;
 }
@@ -45,7 +45,7 @@ const size_t Window::getWidth() const
  * Get the Height of the window
  * @return const size_t Height of the window
  */
-const size_t Window::getHeight() const
+const size_t Window::get_height() const
 {
     return this->m_height;
 }
@@ -55,7 +55,7 @@ const size_t Window::getHeight() const
  * Get the Title of the window
  * @return const std::string Title of the window
  */
-const std::string Window::getTitle() const
+const std::string Window::get_title() const
 {
     return this->m_title;
 }
@@ -65,7 +65,7 @@ const std::string Window::getTitle() const
  * Get the Window object
  * @return GLFWwindow* Pointer to the window
  */
-GLFWwindow *Window::getWindow() const
+GLFWwindow *Window::get_window() const
 {
     return this->m_window;
 }
