@@ -34,6 +34,16 @@ uint8_t *Sprite::get_pixels() const
 
 /**
  * @brief
+ * Get the pixels of the sprite
+ * @return uint8_t* Pointer to the pixels
+ */
+uint8_t *Sprite::get_data()
+{
+    return m_pixels;
+}
+
+/**
+ * @brief
  * Get the width of the sprite
  */
 size_t Sprite::get_width() const
@@ -50,15 +60,7 @@ size_t Sprite::get_height() const
     return m_height;
 }
 
-// Setter
-void Sprite::super_set(size_t width, size_t height, uint8_t *pixels)
-{
-    this->set_width(width);
-    this->set_height(height);
-    this->set_pixels(pixels);
-}
-
-// Private Setters
+// Setters
 /**
  * @brief
  * Set the width of the sprite

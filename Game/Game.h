@@ -19,6 +19,7 @@
 // Custom headers
 #include "../Player/Player.cpp"
 #include "../Bullet/Bullet.cpp"
+#include "../Alien/Alien.cpp"
 
 class Game
 {
@@ -36,6 +37,7 @@ public:
     size_t get_num_aliens() const;
 
     Player &get_player();
+    Alien *get_aliens();
     Bullet &get_bullet();
 
     // Setters
@@ -47,6 +49,7 @@ public:
 private:
     // Game objects
     Player player;
+    Alien *aliens;
     Bullet bullets[MAX_BULLETS];
 
     // Game variables

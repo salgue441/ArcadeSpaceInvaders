@@ -26,20 +26,18 @@ public:
 
     // Getters
     uint8_t *get_pixels() const;
+    uint8_t *get_data();
     size_t get_width() const;
     size_t get_height() const;
-
-    // Setters
-    void super_set(size_t, size_t, uint8_t *);
-
-private:
-    size_t m_width, m_height;
-    uint8_t *m_pixels;
 
     // Setters
     void set_width(size_t);
     void set_height(size_t);
     void set_pixels(uint8_t *);
+
+private:
+    size_t m_width, m_height;
+    uint8_t *m_pixels;
 };
 
 #endif //! SPRITE_H

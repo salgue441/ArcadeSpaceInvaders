@@ -67,12 +67,23 @@ Player &Game::get_player()
 
 /**
  * @brief
+ * Get the aliens
+ * @return Alien* Aliens
+ */
+Alien *Game::get_aliens()
+{
+    return aliens;
+}
+
+/**
+ * @brief
  * Get the bullet
  * @return Bullet* Bullet
  */
 Bullet &Game::get_bullet()
 {
-    return bullets[0];
+    for (size_t i{}; i < MAX_BULLETS; ++i)
+        return bullets[i];
 }
 
 // Setters

@@ -28,7 +28,7 @@ public:
     // Getters
     const size_t get_width() const;
     const size_t get_height() const;
-    uint32_t *get_data() const;
+    uint32_t *get_data();
 
     // Setters
     void set_width(size_t &);

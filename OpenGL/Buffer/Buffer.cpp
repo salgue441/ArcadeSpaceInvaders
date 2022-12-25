@@ -50,7 +50,7 @@ const size_t Buffer::get_height() const
  * Get the data of the buffer
  * @return const uint32_t*
  */
-uint32_t *Buffer::get_data() const
+uint32_t *Buffer::get_data()
 {
     return data;
 }
