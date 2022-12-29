@@ -11,21 +11,6 @@
 
 #include "Alien.h"
 
-// Constructor
-/**
- * @brief
- * Construct a new Alien:: Alien object
- * @param x X position of the alien
- * @param y Y position of the alien
- * @param type Type of the alien
- */
-Alien::Alien(size_t x, size_t y, uint8_t type)
-{
-    this->x = x;
-    this->y = y;
-    this->type = type;
-}
-
 // Getters
 /**
  * @brief

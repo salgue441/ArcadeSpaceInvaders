@@ -20,7 +20,6 @@ class Alien
 public:
     // Constructor
     Alien() = default;
-    Alien(size_t, size_t, uint8_t);
 
     // Destructor
     ~Alien() = default;
@@ -38,7 +37,7 @@ public:
 private:
     // Alien variables
     size_t x{}, y{};
-    uint8_t type{};
+    uint8_t type;
 };
 
 #endif //! ALIEN_H

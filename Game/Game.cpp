@@ -52,11 +52,22 @@ size_t Game::get_num_bullets() const
     return num_bullets;
 }
 
+/**
+ * @brief
+ * Gets an alien from the game
+ * @param index
+ * @return Alien&
+ */
+Alien &Game::get_alien(size_t index) const
+{
+    return aliens[index];
+}
+
 // Setters
 /**
  * @brief
  * Sets the width of the game
- * @param width
+ * @param width Width of the game
  */
 void Game::set_width(size_t width)
 {
@@ -66,7 +77,7 @@ void Game::set_width(size_t width)
 /**
  * @brief
  * Sets the height of the game
- * @param height
+ * @param height Height of the game
  */
 void Game::set_height(size_t height)
 {
@@ -76,7 +87,7 @@ void Game::set_height(size_t height)
 /**
  * @brief
  * Sets the number of aliens in the game
- * @param num_aliens
+ * @param num_aliens Number of aliens
  */
 void Game::set_num_aliens(size_t num_aliens)
 {
@@ -86,9 +97,20 @@ void Game::set_num_aliens(size_t num_aliens)
 /**
  * @brief
  * Sets the number of bullets in the game
- * @param num_bullets
+ * @param num_bullets Number of bullets
  */
 void Game::set_num_bullets(size_t num_bullets)
 {
     this->num_bullets = num_bullets;
+}
+
+/**
+ * @brief
+ * Sets an alien in the game
+ * @param index Index of the alien
+ * @param alien Alien to set
+ */
+void Game::set_alien(size_t index, Alien &alien)
+{
+    aliens[index] = alien;
 }

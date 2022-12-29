@@ -26,9 +26,11 @@
 #include "OpenGL/Buffer/Buffer.cpp"
 
 // Game & Sprite
+#include "Game/Game.cpp"
 #include "Sprite/Sprite.cpp"
 
 // Player, Bullet & Enemy
+#include "Alien/Alien.cpp"
 
 /* ---- Function prototypes ---- */
 // Validation
@@ -53,6 +55,7 @@ double random(uint32_t *);
 // Game
 uint32_t rgb_to_uint32(uint8_t, uint8_t, uint8_t);
 void generate_alien_sprites(Sprite *);
+void generate_alien_death_sprite(Sprite &);
 
 /* ---- Global variables ---- */
 bool game_running{false};
@@ -157,9 +160,50 @@ int main(int argc, char **argv)
     Sprite alien_sprites[6];
     generate_alien_sprites(alien_sprites);
 
+    Sprite alien_death_sprite;
+    generate_alien_death_sprite(alien_death_sprite);
+
     // Game variables
+    Game game;
+    game.set_width(buffer_width);
+    game.set_height(buffer_height);
+    game.set_num_bullets(0);
+    game.set_num_aliens(55);
+
+    size_t alien_swarm_position{24};
+    size_t alien_max_swarm_pos{game.get_width() - 16 * 11 - 3};
+    size_t aliens_killed{};
+    bool should_change_speed{false};
+
+    for (size_t xi{}; xi < 11; ++xi)
+    {
+        for (size_t yi{}; yi < 5; ++yi)
+        {
+            Alien alien{game.get_alien(xi + yi * 11)};
+            alien.set_type((5 - yi) / 2 + 1);
+
+            const Sprite &sprite{alien_sprites[2 * (alien.get_type() - 1)]};
+
+            alien.set_x(16 * xi + alien_swarm_position +
+                        (alien_death_sprite.get_width() - sprite.get_width()) / 2);
+            alien.set_y(17 * yi + 128);
+        }
+    }
+
+    uint8_t *death_counter{new uint8_t[game.get_num_aliens()]};
+
+    for (size_t i{}; i < game.get_num_aliens(); ++i)
+        death_counter[i] = 10;
+
     uint32_t clear_color{rgb_to_uint32(0, 128, 0)};
+    uint32_t rng{13};
+
+    int alien_direction{4};
+    size_t score{};
+    size_t credits{};
+
     game_running = true;
+    int player_direction{};
 
     while (!glfwWindowShouldClose(window.get_window()) && game_running)
     {
@@ -468,4 +512,24 @@ void generate_alien_sprites(Sprite *aliens)
         0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0,
         0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0,
         0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0});
+}
+
+/**
+ * @brief
+ * Generates the alien death sprites
+ * @param alien Alien sprite
+ */
+void generate_alien_death_sprites(Sprite &alien)
+{
+    alien.set_width(13);
+    alien.set_height(7);
+
+    alien.set_pixels(new uint8_t[91]{
+        0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+        1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+        0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0,
+        0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0});
 }
