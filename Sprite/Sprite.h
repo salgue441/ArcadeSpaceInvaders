@@ -1,9 +1,9 @@
 /**
  * @file Sprite.h
  * @author Carlos Salguero
- * @brief Declaration of the Sprite class
+ * @brief Sprite class declaration
  * @version 0.1
- * @date 2022-12-25
+ * @date 2022-12-28
  *
  * @copyright Copyright (c) 2022
  *
@@ -18,17 +18,16 @@
 class Sprite
 {
 public:
-    // Constructor
-    Sprite();
+    // Constructors
+    Sprite() = default;
 
     // Destructor
     ~Sprite() = default;
 
     // Getters
-    uint8_t *get_pixels() const;
-    uint8_t *get_data();
     size_t get_width() const;
     size_t get_height() const;
+    uint8_t *get_pixels() const;
 
     // Setters
     void set_width(size_t);
@@ -36,8 +35,8 @@ public:
     void set_pixels(uint8_t *);
 
 private:
-    size_t m_width, m_height;
-    uint8_t *m_pixels;
+    size_t m_width{}, m_height{};
+    uint8_t *m_pixels{nullptr};
 };
 
 #endif //! SPRITE_H

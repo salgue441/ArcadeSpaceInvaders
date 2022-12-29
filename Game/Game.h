@@ -1,9 +1,9 @@
 /**
- * @file Game.cpp
+ * @file Game.h
  * @author Carlos Salguero
  * @brief Declaration of the Game class
  * @version 0.1
- * @date 2022-12-25
+ * @date 2022-12-28
  *
  * @copyright Copyright (c) 2022
  *
@@ -15,18 +15,15 @@
 #define MAX_BULLETS 128
 
 #include <cstdint>
+#include <cstdio>
 
-// Custom headers
-#include "../Player/Player.cpp"
-#include "../Bullet/Bullet.cpp"
-#include "../Alien/Alien.cpp"
+// Game Classes
 
 class Game
 {
 public:
     // Constructor
     Game() = default;
-    Game(size_t, size_t);
 
     // Destructor
     ~Game() = default;
@@ -35,23 +32,15 @@ public:
     size_t get_width() const;
     size_t get_height() const;
     size_t get_num_aliens() const;
-
-    Player &get_player();
-    Alien *get_aliens();
-    Bullet &get_bullet();
+    size_t get_num_bullets() const;
 
     // Setters
-    void set_width(size_t &);
-    void set_height(size_t &);
-    void set_num_aliens(size_t);
-    void set_num_bullets(size_t);
+    void set_width(size_t width);
+    void set_height(size_t height);
+    void set_num_aliens(size_t num_aliens);
+    void set_num_bullets(size_t num_bullets);
 
 private:
-    // Game objects
-    Player player;
-    Alien *aliens;
-    Bullet bullets[MAX_BULLETS];
-
     // Game variables
     size_t width{}, height{};
     size_t num_aliens{};
