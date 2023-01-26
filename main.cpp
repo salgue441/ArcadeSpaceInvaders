@@ -12,34 +12,33 @@
 #include <cstdio>
 #include <cstdint>
 #include <limits>
+#include <iostream>
 
 // OpenGL Headers
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 /* ---- Custom Headers ---- */
-// OpenGL Error & Window
+// OpenGL Error Declaration & Window Creation
 #include "OpenGL/Error/glError.h"
 #include "OpenGL/Window/Window.cpp"
 
-// Buffer
+// Buffer Class
 #include "OpenGL/Buffer/Buffer.cpp"
 
-// Game & Sprite
-#include "Game/Game.cpp"
-#include "Sprite/Sprite.cpp"
+// Game Sprite's Classes
+#include "Sprites/Sprite.cpp"
 
-// Player, Bullet & Enemy
-#include "Alien/Alien.cpp"
+// Player, Bullet & Enemy Classes
 
-/* ---- Function prototypes ---- */
-// Validation
-void validate_shader(GLuint, const char *);
-bool validate_program(GLuint);
-
-// Callbacks
+/* ---- Function Prototypes ---- */
+// Game Callbacks
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
+
+// Shader & Program Validation
+void validate_shader(GLuint, const char *);
+bool validate_program(GLuint);
 
 // Buffer
 void buffer_clear(Buffer &, uint32_t);
@@ -48,30 +47,31 @@ void buffer_clear(Buffer &, uint32_t);
 const char *create_fragment_shader();
 const char *create_vertex_shader();
 
-// Shifts & random
-uint32_t xorshift32(uint32_t *);
-double random(uint32_t *);
-
-// Game
-uint32_t rgb_to_uint32(uint8_t, uint8_t, uint8_t);
+// Game utilities
 void generate_alien_sprites(Sprite *);
 void generate_alien_death_sprite(Sprite &);
+void generate_player_sprite(Sprite &);
+void generate_text_spritesheet(Sprite &);
 
-/* ---- Global variables ---- */
+/* ---- Global Variables ---- */
 bool game_running{false};
-bool fire_pressed{false};
-int move_direction{};
+bool fire_pressed{0};
+int move_direction{0};
 
-/* ---- Main function ---- */
+/* ---- Main Function ---- */
 int main(int argc, char **argv)
 {
+    (void)argc;
+    (void)argv;
+
+    // Error callback
     glfwSetErrorCallback(error_callback);
 
     // Window creation
     const size_t buffer_width{224};
     const size_t buffer_height{256};
 
-    Window window{buffer_width, buffer_height, "Space Invaders"};
+    Window window(buffer_width, buffer_height, "Space Invaders");
     glfwSetKeyCallback(window.get_window(), key_callback);
 
     gl_debug(__FILE__, __LINE__);
@@ -80,29 +80,49 @@ int main(int argc, char **argv)
     glfwSwapInterval(1);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
-    // Buffer creation
+    // Graphics Buffer
     Buffer buffer(buffer_width, buffer_height);
-    buffer_clear(buffer, 0x00000000);
+    buffer_clear(buffer, 0);
 
-    // Textures
-    GLuint texture;
+    // Texture & Presenting texture to OpenGL
+    GLuint buffer_texture;
+    glGenTextures(1, &buffer_texture);
+    glBindTexture(GL_TEXTURE_2D, buffer_texture);
 
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB8,
+        buffer.get_width(), buffer.get_height(),
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_INT_8_8_8_8,
+        buffer.get_data());
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8,
-                 buffer.get_width(), buffer.get_height(), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, buffer.get_data());
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_NEAREST);
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_NEAREST);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE);
 
     // Vao
     GLuint vao;
     glGenVertexArrays(1, &vao);
 
-    // Creating the shaders
+    // Creating the shaders for display buffer
     static const char *vertex_shader = create_vertex_shader();
     static const char *fragment_shader = create_fragment_shader();
     GLuint shader_id = glCreateProgram();
@@ -137,7 +157,8 @@ int main(int argc, char **argv)
 
     if (!validate_program(shader_id))
     {
-        fprintf(stderr, "Error while linking shader program.\n");
+        fprintf(stderr,
+                "Error while linking shader program.\n");
         glfwTerminate();
 
         glDeleteVertexArrays(1, &vao);
@@ -163,106 +184,26 @@ int main(int argc, char **argv)
     Sprite alien_death_sprite;
     generate_alien_death_sprite(alien_death_sprite);
 
-    // Game variables
-    Game game;
-    game.set_width(buffer_width);
-    game.set_height(buffer_height);
-    game.set_num_bullets(0);
-    game.set_num_aliens(55);
+    Sprite text_spritesheet;
+    generate_text_spritesheet(text_spritesheet);
 
-    size_t alien_swarm_position{24};
-    size_t alien_max_swarm_pos{game.get_width() - 16 * 11 - 3};
-    size_t aliens_killed{};
-    bool should_change_speed{false};
+    Sprite number_spritesheet = text_spritesheet;
+    // number_spritesheet.get_data() += 16 * 35;
 
-    for (size_t xi{}; xi < 11; ++xi)
-    {
-        for (size_t yi{}; yi < 5; ++yi)
-        {
-            Alien alien{game.get_alien(xi + yi * 11)};
-            alien.set_type((5 - yi) / 2 + 1);
+    Sprite player_bullet_sprite;
+    player_bullet_sprite.set_sprite_width(1);
+    player_bullet_sprite.set_sprite_height(3);
+    player_bullet_sprite.set_data(new uint8_t[3]{1, 1, 1});
 
-            const Sprite &sprite{alien_sprites[2 * (alien.get_type() - 1)]};
+    // Data Collection & Destruction
+    glfwDestroyWindow(window.get_window());
+    glfwTerminate();
 
-            alien.set_x(16 * xi + alien_swarm_position +
-                        (alien_death_sprite.get_width() - sprite.get_width()) / 2);
-            alien.set_y(17 * yi + 128);
-        }
-    }
-
-    uint8_t *death_counter{new uint8_t[game.get_num_aliens()]};
-
-    for (size_t i{}; i < game.get_num_aliens(); ++i)
-        death_counter[i] = 10;
-
-    uint32_t clear_color{rgb_to_uint32(0, 128, 0)};
-    uint32_t rng{13};
-
-    int alien_direction{4};
-    size_t score{};
-    size_t credits{};
-
-    game_running = true;
-    int player_direction{};
-
-    while (!glfwWindowShouldClose(window.get_window()) && game_running)
-    {
-        // Clearing the buffer
-        buffer_clear(buffer, clear_color);
-
-        // Swap buffers
-        glfwSwapBuffers(window.get_window());
-        glfwPollEvents();
-    }
+    glDeleteVertexArrays(1, &vao);
 }
 
-/* ---- Function implementations ---- */
-// Validation
-/**
- * @brief
- * Validates a shader program
- * @param shader Shader program to validate
- * @param file File where the shader program is located
- */
-void validate_shader(GLuint shader, const char *file)
-{
-    static const unsigned int BUFFER_SIZE{512};
-    char buffer[BUFFER_SIZE];
-    GLsizei length{};
-
-    glGetShaderInfoLog(shader, BUFFER_SIZE, &length, buffer);
-
-    if (length > 0)
-        fprintf(stderr, "Shader %d (%s) compile error: %s\n", shader,
-                (file ? file : ""), buffer);
-}
-
-/**
- * @brief
- * Validates a shader program.
- * @param program Shader program to validate
- * @return true if the shader program is valid
- * @return false if the shader program is not valid.
- */
-bool validate_program(GLuint program)
-{
-    static const unsigned int BUFFER_SIZE{512};
-    char buffer[BUFFER_SIZE];
-    GLsizei length{};
-
-    glValidateProgram(program);
-    glGetProgramInfoLog(program, BUFFER_SIZE, &length, buffer);
-
-    if (length > 0)
-    {
-        fprintf(stderr, "Program %d link error: %s\n", program, buffer);
-        return false;
-    }
-
-    return true;
-}
-
-// Callbacks
+/* ---- Function Implementations ---- */
+// Game Callbacks
 /**
  * @brief
  * Error callback function
@@ -271,7 +212,7 @@ bool validate_program(GLuint program)
  */
 void error_callback(int error, const char *description)
 {
-    fprintf(stderr, "Error: %s (%d)", description, error);
+    fprintf(stderr, "Error: %s\n", description);
 }
 
 /**
@@ -327,10 +268,55 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     }
 }
 
+// Shader & Program Validation
+/**
+ * @brief
+ * Validates a shader program
+ * @param shader Shader program to validate
+ * @param file File where the shader program is located
+ */
+void validate_shader(GLuint shader, const char *file)
+{
+    static const unsigned int BUFFER_SIZE{512};
+    char buffer[BUFFER_SIZE];
+    GLsizei length{};
+
+    glGetShaderInfoLog(shader, BUFFER_SIZE, &length, buffer);
+
+    if (length > 0)
+        fprintf(stderr, "Shader %d (%s) compile error: %s\n", shader,
+                (file ? file : ""), buffer);
+}
+
+/**
+ * @brief
+ * Validates a shader program.
+ * @param program Shader program to validate
+ * @return true if the shader program is valid
+ * @return false if the shader program is not valid.
+ */
+bool validate_program(GLuint program)
+{
+    static const unsigned int BUFFER_SIZE{512};
+    char buffer[BUFFER_SIZE];
+    GLsizei length{};
+
+    glValidateProgram(program);
+    glGetProgramInfoLog(program, BUFFER_SIZE, &length, buffer);
+
+    if (length > 0)
+    {
+        fprintf(stderr, "Program %d link error: %s\n", program, buffer);
+        return false;
+    }
+
+    return true;
+}
+
 // Buffer
 /**
  * @brief
- * Clears the buffer
+ * Clears the graphics buffer.
  * @param buffer Buffer to clear
  * @param color Color to clear the buffer with
  */
@@ -388,51 +374,7 @@ const char *create_vertex_shader()
     )";
 }
 
-// Shifts and random
-/**
- * @brief
- * Xorshift32 random number generator
- * @see https://en.wikipedia.org/wiki/Xorshift
- * @param state State of the generator
- * @return uint32_t
- */
-uint32_t xorshift32(uint32_t *state)
-{
-    uint32_t x{*state};
-
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    *state = x;
-
-    return x;
-}
-
-/**
- * @brief
- * Random number generator
- * @param state State of the generator
- * @return double Number generated
- */
-double random(uint32_t *state)
-{
-    return static_cast<double>(xorshift32(state)) / UINT32_MAX;
-}
-
-// Game
-/**
- * @brief
- * Convert RGB values to a uint32_t
- * @param r Red value
- * @param g Green value
- * @param b Blue value
- * @return uint32_t
- */
-uint32_t rgb_to_uint32(uint8_t r, uint8_t g, uint8_t b)
-{
-    return (r << 24) | (g << 16) | (b << 8) | 255;
-}
-
+// Game utilities
 // Game
 /**
  * @brief
@@ -441,9 +383,9 @@ uint32_t rgb_to_uint32(uint8_t r, uint8_t g, uint8_t b)
  */
 void generate_alien_sprites(Sprite *aliens)
 {
-    aliens[0].set_width(8);
-    aliens[0].set_height(8);
-    aliens[0].set_pixels(new uint8_t[64]{
+    aliens[0].set_sprite_width(8);
+    aliens[0].set_sprite_height(8);
+    aliens[0].set_data(new uint8_t[64]{
         0, 0, 0, 1, 1, 0, 0, 0,
         0, 0, 1, 1, 1, 1, 0, 0,
         0, 1, 1, 1, 1, 1, 1, 0,
@@ -453,9 +395,9 @@ void generate_alien_sprites(Sprite *aliens)
         1, 0, 0, 0, 0, 0, 0, 1,
         0, 1, 0, 0, 0, 0, 1, 0});
 
-    aliens[1].set_width(8);
-    aliens[1].set_height(8);
-    aliens[1].set_pixels(new uint8_t[64]{
+    aliens[1].set_sprite_width(8);
+    aliens[1].set_sprite_height(8);
+    aliens[1].set_data(new uint8_t[64]{
         0, 0, 0, 1, 1, 0, 0, 0,
         0, 0, 1, 1, 1, 1, 0, 0,
         0, 1, 1, 1, 1, 1, 1, 0,
@@ -465,9 +407,9 @@ void generate_alien_sprites(Sprite *aliens)
         0, 1, 0, 1, 1, 0, 1, 0,
         1, 0, 1, 0, 0, 1, 0, 1});
 
-    aliens[2].set_width(11);
-    aliens[2].set_height(8);
-    aliens[2].set_pixels(new uint8_t[88]{
+    aliens[2].set_sprite_width(11);
+    aliens[2].set_sprite_height(8);
+    aliens[2].set_data(new uint8_t[88]{
         0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
         0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
         0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
@@ -477,9 +419,9 @@ void generate_alien_sprites(Sprite *aliens)
         1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1,
         0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0});
 
-    aliens[3].set_width(11);
-    aliens[3].set_height(8);
-    aliens[3].set_pixels(new uint8_t[88]{
+    aliens[3].set_sprite_width(11);
+    aliens[3].set_sprite_height(8);
+    aliens[3].set_data(new uint8_t[88]{
         0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
         1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1,
         1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1,
@@ -489,9 +431,9 @@ void generate_alien_sprites(Sprite *aliens)
         0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0});
 
-    aliens[4].set_width(12);
-    aliens[4].set_height(8);
-    aliens[4].set_pixels(new uint8_t[96]{
+    aliens[4].set_sprite_width(12);
+    aliens[4].set_sprite_height(8);
+    aliens[4].set_data(new uint8_t[96]{
         0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
         0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -501,9 +443,9 @@ void generate_alien_sprites(Sprite *aliens)
         0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0,
         1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1});
 
-    aliens[5].set_width(12);
-    aliens[5].set_height(8);
-    aliens[5].set_pixels(new uint8_t[96]{
+    aliens[5].set_sprite_width(12);
+    aliens[5].set_sprite_height(8);
+    aliens[5].set_data(new uint8_t[96]{
         0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
         0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -519,12 +461,12 @@ void generate_alien_sprites(Sprite *aliens)
  * Generates the alien death sprites
  * @param alien Alien sprite
  */
-void generate_alien_death_sprites(Sprite &alien)
+void generate_alien_death_sprite(Sprite &alien)
 {
-    alien.set_width(13);
-    alien.set_height(7);
+    alien.set_sprite_width(13);
+    alien.set_sprite_height(7);
 
-    alien.set_pixels(new uint8_t[91]{
+    alien.set_data(new uint8_t[91]{
         0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
         0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0,
         0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -532,4 +474,101 @@ void generate_alien_death_sprites(Sprite &alien)
         0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
         0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0,
         0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0});
+}
+
+/**
+ * @brief
+ * Generates the player's sprites
+ * @param player Player sprite
+ */
+void generate_player_sprite(Sprite &player)
+{
+    player.set_sprite_width(11);
+    player.set_sprite_height(7);
+    player.set_data(new uint8_t[77]{
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, // .....@.....
+        0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, // ....@@@....
+        0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, // ....@@@....
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, // .@@@@@@@@@.
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // @@@@@@@@@@@
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // @@@@@@@@@@@
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // @@@@@@@@@@@
+    });
+}
+
+void generate_text_spritesheet(Sprite &text_spritesheet)
+{
+    text_spritesheet.set_sprite_width(5);
+    text_spritesheet.set_sprite_height(7);
+
+    text_spritesheet.set_data(new uint8_t[65 * 35]{
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0,
+        1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1,
+        0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1,
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,
+        1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
+
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+
+        0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+        1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+        0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1,
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+        1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1,
+        0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
+        1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+
+        0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1,
+        0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+        0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }

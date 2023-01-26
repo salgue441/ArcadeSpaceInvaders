@@ -3,9 +3,9 @@
  * @author Carlos Salguero
  * @brief Implementation of the Sprite class
  * @version 0.1
- * @date 2022-12-28
+ * @date 2023-01-25
  *
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2023
  *
  */
 
@@ -17,9 +17,9 @@
  * Gets the height of the sprite
  * @return size_t width of the sprite
  */
-size_t Sprite::get_width() const
+std::size_t Sprite::get_sprite_width() const
 {
-    return m_width;
+    return sprite_width;
 }
 
 /**
@@ -27,9 +27,9 @@ size_t Sprite::get_width() const
  * Gets the height of the sprite
  * @return size_t height of the sprite
  */
-size_t Sprite::get_height() const
+std::size_t Sprite::get_sprite_height() const
 {
-    return m_height;
+    return sprite_height;
 }
 
 /**
@@ -37,38 +37,38 @@ size_t Sprite::get_height() const
  * Gets the pixels of the sprite
  * @return uint32_t* pixels of the sprite
  */
-uint8_t *Sprite::get_pixels() const
+uint8_t *Sprite::get_data()
 {
-    return m_pixels;
+    return sprite_data;
 }
 
 // Setters
 /**
  * @brief
  * Sets the width of the sprite
- * @param width width of the sprite
+ * @param width Width of the sprite
  */
-void Sprite::set_width(size_t width)
+void Sprite::set_sprite_width(std::size_t width)
 {
-    m_width = width;
+    sprite_width = width;
 }
 
 /**
  * @brief
  * Sets the height of the sprite
- * @param height height of the sprite
+ * @param height Height of the sprite
  */
-void Sprite::set_height(size_t height)
+void Sprite::set_sprite_height(std::size_t height)
 {
-    m_height = height;
+    sprite_height = height;
 }
 
 /**
  * @brief
  * Sets the pixels of the sprite
- * @param pixels pixels of the sprite
+ * @param data pixels of the sprite
  */
-void Sprite::set_pixels(uint8_t *pixels)
+void Sprite::set_data(uint8_t *data)
 {
-    m_pixels = pixels;
+    sprite_data = data;
 }
