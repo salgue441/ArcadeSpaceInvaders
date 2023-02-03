@@ -147,7 +147,4 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: \
  /usr/include/c++/11/bits/cxxabi_init_exception.h \
  /usr/include/c++/11/typeinfo /usr/include/c++/11/bits/nested_exception.h \
  /mnt/d/developer/SpaceInvaders/OpenGL/Window/../Error/glError.h \
- /mnt/d/developer/SpaceInvaders/OpenGL/Buffer/Buffer.cpp \
- /mnt/d/developer/SpaceInvaders/OpenGL/Buffer/Buffer.h \
- /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
  /mnt/d/developer/SpaceInvaders/Structs.h

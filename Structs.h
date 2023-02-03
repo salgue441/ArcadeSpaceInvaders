@@ -19,6 +19,17 @@
 // Structs
 /**
  * @brief
+ * Struct that contains the width and height of the buffer
+ * and a pointer to the data of the buffer
+ */
+struct Buffer
+{
+    size_t width, height;
+    uint32_t *data;
+};
+
+/**
+ * @brief
  * Struct that contains the width and height of the sprite
  * and a pointer to the data of the sprite
  */
@@ -75,7 +86,7 @@ struct Game
     std::size_t num_aliens;
     std::size_t num_bullets;
 
-    Alien *alienș;
+    Alien *aliens;
     Player *player;
     Bullet bullets[MAX_BULLETS];
 };

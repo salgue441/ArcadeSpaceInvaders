@@ -181,19 +181,8 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
   /usr/include/c++/11/typeinfo \
   /usr/include/c++/11/bits/nested_exception.h \
   ../OpenGL/Error/glError.h \
-  ../OpenGL/Buffer/Buffer.cpp \
-  ../OpenGL/Buffer/Buffer.h \
-  /usr/include/c++/11/cstring \
-  /usr/include/string.h \
-  /usr/include/strings.h \
   ../Structs.h
 
-
-/usr/include/string.h:
-
-/usr/include/c++/11/cstring:
-
-../OpenGL/Buffer/Buffer.cpp:
 
 /usr/include/c++/11/bits/nested_exception.h:
 
@@ -206,8 +195,6 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/stdlib.h:
 
 /usr/include/c++/11/bits/basic_string.tcc:
-
-../OpenGL/Buffer/Buffer.h:
 
 /usr/include/c++/11/bits/charconv.h:
 
@@ -376,8 +363,6 @@ CMakeFiles/SpaceInvaders.dir/main.cpp.o: ../main.cpp \
 /usr/include/GL/glu.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-
-/usr/include/strings.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
